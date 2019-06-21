@@ -38,9 +38,9 @@ public class UserController {
         return "login";
     }
 
-    @RequestMapping("permission")
-    public String permission(){
-        return "permission";
+    @RequestMapping("unauthorized")
+    public String unauthorized(){
+        return "unauthorized";
     }
 
     @RequestMapping("toLogin")
@@ -67,13 +67,13 @@ public class UserController {
 
     }
 
-    @RequestMapping("logout")
+    /*@RequestMapping("logout")
     public String logout(){
         //获取subject
         Subject subject = SecurityUtils.getSubject();
         subject.logout();
 
         return "redirect:/login";
-    }
+    }*/
 
 }
