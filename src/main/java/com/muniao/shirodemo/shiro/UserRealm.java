@@ -13,6 +13,7 @@ import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.Subject;
+import org.apache.shiro.util.ByteSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -42,24 +43,29 @@ public class UserRealm extends AuthorizingRealm
 
     //执行认证逻辑
     @Override
-    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken arg0) throws AuthenticationException
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken token) throws AuthenticationException
     {
-        System.out.println("执行认证逻辑");
-
-        //shiro判断逻辑
-        UsernamePasswordToken user = (UsernamePasswordToken) arg0;
-        User realUser = new User();
-        realUser.setName(user.getUsername());
-        realUser.setPassword(String.copyValueOf(user.getPassword()));
-        User newUser = userService.findUser(realUser);
-        if (newUser == null)
-        {
-            //用户名错误
-            //shiro会抛出UnknownAccountException异常
+        System.out.println("MyShiroRealm.doGetAuthenticationInfo()");
+        //获取用户的输入的账号.
+        String username = (String)token.getPrincipal();
+        System.out.println(token.getCredentials());
+        //通过username从数据库中查找 User对象，如果找到，没找到.
+        //实际项目中，这里可以根据实际情况做缓存，如果不做，Shiro自己也是有时间间隔机制，2分钟内不会重复执行该方法
+        User userInfo = userService.findUserByName(username);
+        System.out.println("----->>userInfo="+userInfo);
+        if(userInfo == null){
+            //UnknownAccountException
             return null;
         }
 
-        return new SimpleAuthenticationInfo(newUser, newUser.getPassword(), "");
+        SimpleAuthenticationInfo authenticationInfo = new SimpleAuthenticationInfo(
+                userInfo, //用户名
+                userInfo.getPassword(), //密码
+                ByteSource.Util.bytes(userInfo.getCredentialsSalt()),//salt=username+salt
+                getName()  //realm name
+        );
+
+        return authenticationInfo;
     }
 
 

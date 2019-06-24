@@ -10,13 +10,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
+
 @Controller
 public class UserController {
-
-    @RequestMapping("what")
-    public String why(){
-        return "sse";
-    }
 
     @RequestMapping("one")
     public String getOne(){
@@ -28,52 +26,42 @@ public class UserController {
         return "two";
     }
 
-    @RequestMapping("")
-    public String init(){
-        return "login";
-    }
-
-    @RequestMapping("login")
-    public String login(){
-        return "login";
-    }
-
     @RequestMapping("unauthorized")
     public String unauthorized(){
         return "unauthorized";
     }
 
-    @RequestMapping("toLogin")
-    public String toLogin(User user, Model model){
-
-        //shiro用户认证
-        //获取subject
-        Subject subject = SecurityUtils.getSubject();
-        //封装用户数据
-        UsernamePasswordToken userToken = new UsernamePasswordToken(user.getName(),user.getPassword());
-        //执行登录方法,用捕捉异常去判断是否登录成功
-        try {
-            subject.login(userToken);
-            return "redirect:/what";
-        } catch (UnknownAccountException e) {
-            //用户名不存在
-            model.addAttribute("msg","用户名不存在");
-            return "login";
-        }catch (IncorrectCredentialsException e) {
-            //密码错误
-            model.addAttribute("msg","密码错误");
-            return "login";
-        }
-
+    @RequestMapping({"/","/index"})
+    public String index(){
+        return"/index";
     }
 
-    /*@RequestMapping("logout")
-    public String logout(){
-        //获取subject
-        Subject subject = SecurityUtils.getSubject();
-        subject.logout();
-
-        return "redirect:/login";
-    }*/
+    @RequestMapping("/login")
+    public String login(HttpServletRequest request, Map<String, Object> map) throws Exception{
+        System.out.println("HomeController.login()");
+        // 登录失败从request中获取shiro处理的异常信息。
+        // shiroLoginFailure:就是shiro异常类的全类名.
+        String exception = (String) request.getAttribute("shiroLoginFailure");
+        System.out.println("exception=" + exception);
+        String msg = "";
+        if (exception != null) {
+            if (UnknownAccountException.class.getName().equals(exception)) {
+                System.out.println("UnknownAccountException -- > 账号不存在：");
+                msg = "UnknownAccountException -- > 账号不存在：";
+            } else if (IncorrectCredentialsException.class.getName().equals(exception)) {
+                System.out.println("IncorrectCredentialsException -- > 密码不正确：");
+                msg = "IncorrectCredentialsException -- > 密码不正确：";
+            } else if ("kaptchaValidateFailed".equals(exception)) {
+                System.out.println("kaptchaValidateFailed -- > 验证码错误");
+                msg = "kaptchaValidateFailed -- > 验证码错误";
+            } else {
+                msg = "else >> "+exception;
+                System.out.println("else -- >" + exception);
+            }
+        }
+        map.put("msg", msg);
+        // 此方法不处理登录成功,由shiro进行处理
+        return "/login";
+    }
 
 }

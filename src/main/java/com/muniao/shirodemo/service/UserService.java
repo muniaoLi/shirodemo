@@ -4,5 +4,5 @@ import com.muniao.shirodemo.domain.User;
 
 public interface UserService
 {
-    User findUser(User user);
+    User findUserByName(String userName);
 }

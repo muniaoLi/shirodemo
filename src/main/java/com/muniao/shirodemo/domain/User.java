@@ -9,7 +9,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class User
 {
-    private String name;
+    private String username;
     private String password;
     private String perms;
+    private String salt;//加密密码的盐
+
+    /**
+     * 密码盐.
+     * @return
+     */
+    public String getCredentialsSalt(){
+        return this.username+this.salt;
+    }
 }
